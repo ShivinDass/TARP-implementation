@@ -49,6 +49,8 @@ for _ in range(1):
 	model = RewardGen(len(dataset[0].rewards.keys()))
 	pred_rew = model(data)
 
+	for sd in model.lstm_encoder.encoder.state_dict():
+		print(sd,":", model.lstm_encoder.encoder.state_dict()[sd].size())
 	loss = th.nn.MSELoss()
 	l = loss(pred_rew, true_rew)
 	l.backward()

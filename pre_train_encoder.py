@@ -39,6 +39,10 @@ model = RewardGen(len(spec['rewards']))
 optimizer = optim.Adam(model.parameters(), lr = 0.0001)
 loss = th.nn.MSELoss()
 
+# checkpoint = th.load("saved models/full_reward_gen_model")
+# model.load_state_dict(checkpoint["model"])
+# optimizer.load_state_dict(checkpoint["optim"])
+
 for epoch in range(n_epochs):
 
     total_loss = 0
@@ -64,6 +68,8 @@ for epoch in range(n_epochs):
 
     print("epoch:", epoch, ", loss:", total_loss)
 
+th.save({
+            "model": model.state_dict(),
+            "optim": optimizer.state_dict()}, "saved models/full_reward_gen_model")
 
-
-
+th.save(model.lstm_encoder.encoder.state_dict(), "saved models/encoder_model")
