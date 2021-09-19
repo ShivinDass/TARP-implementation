@@ -25,7 +25,7 @@ class MovingSpriteDataset(Dataset):
         return data_dict
     
     def __len__(self):
-        return 256
+        return 512
 
 
 class MovingSpritesGenerator:

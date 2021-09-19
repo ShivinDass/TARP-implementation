@@ -33,29 +33,16 @@ class Encoder(nn.Module):
         self.in_channels = 1
         self.input_dim = 64
 
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=4,
-                                kernel_size=4, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=4, out_channels=8,
-                                kernel_size=4, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=8, out_channels=16,
-                                kernel_size=4, stride=2, padding=1)
-        self.conv4 = nn.Conv2d(in_channels=16, out_channels=32,
-                                kernel_size=4, stride=2, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=32, out_channels=64,
-                                kernel_size=4, stride=2, padding=1)
-        self.conv6 = nn.Conv2d(in_channels=64, out_channels=128,
-                                kernel_size=2, stride=2, padding=0)
-        
-        self.fc1 = nn.Linear(in_features=128, out_features=64)
-
         self.encoder = nn.Sequential(
-            self.conv1, nn.LeakyReLU(),
-            self.conv2, nn.LeakyReLU(),
-            self.conv3, nn.LeakyReLU(),
-            self.conv4, nn.LeakyReLU(),
-            self.conv5, nn.LeakyReLU(),
-            self.conv6, nn.LeakyReLU()
+            nn.Conv2d(in_channels=1, out_channels=4, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
+            nn.Conv2d(in_channels=4, out_channels=8, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
+            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2, stride=2, padding=0), nn.LeakyReLU()
         )
+
+        self.fc1 = nn.Linear(in_features=128, out_features=64)
 
     def forward(self, input):
         x = self.encoder(input)
