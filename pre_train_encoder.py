@@ -23,7 +23,7 @@ def process_labels(rewards):
 reward_list = [VertPosReward, HorPosReward, AgentXReward, AgentYReward, TargetXReward, TargetYReward]
 reward_list = [VertPosReward]
 spec = AttrDict(
-	resolution=64,
+	resolution=8,
 	max_seq_len=30,#30
 	max_speed=0.05,      # total image range [0, 1]
 	obj_size=0.2,       # size of objects, full images is 1.0
@@ -31,12 +31,14 @@ spec = AttrDict(
 	rewards= reward_list
 )
 
-# dataset = MovingSpriteDataset(spec)
-# train_dataloader = DataLoader(dataset, batch_size=32)
+dataset = MovingSpriteDataset(spec)
+train_dataloader = DataLoader(dataset, batch_size=32)
 # th.save(train_dataloader, "data/pre_training_data32.pth")
-# exit(0)
+print(dataset[0]['images'][0])
+exit(0)
 
-train_dataloader = th.load("data/pre_training_data.pth")
+
+# train_dataloader = th.load("data/pre_training_data.pth")
 n_epochs = 1
 model = RewardGen(len(spec['rewards']))
 # checkpoint = th.load("saved models/full_reward_gen_model")
