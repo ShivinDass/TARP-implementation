@@ -3,7 +3,7 @@ import cv2
 from torch.nn.modules.rnn import LSTM
 from general_utils import make_image_seq_strip, AttrDict
 from sprites_datagen.rewards import *
-# from sprites_datagen.moving_sprites import DistractorTemplateMovingSpritesGenerator, MovingSpriteDataset
+from sprites_datagen.moving_sprites import DistractorTemplateMovingSpritesGenerator, MovingSpriteDataset
 import numpy as np
 import torch as th
 import torch.optim as optim
@@ -46,7 +46,7 @@ optimizer = optim.Adam(model.parameters(), lr = 0.0005)
 loss = th.nn.MSELoss()
 # checkpoint2 = th.load("saved models/full_reward_optim")
 # optimizer.load_state_dict(checkpoint2)
-print(optimizer.state_dict)
+# print(optimizer.state_dict)
 
 
 # print(model.lstm_encoder.encoder.state_dict)
@@ -81,44 +81,9 @@ for epoch in range(n_epochs):
 #     print(param)
 # print("\n\n")
 
-model2 = RewardGen(len(spec['rewards']))
-model2.load_state_dict(model.state_dict())
-optimizer2 = optim.Adam(model2.parameters(), lr=0.0005)
-
-# for param in model2.lstm_encoder.encoder.parameters():
-#     print(param)
-
-for epoch in range(n_epochs):
-
-    total_loss = 0
-
-    for batch in tqdm(train_dataloader):
-
-        train_data = batch['images']
-        # print("Train Data Shape:",train_data.shape)
-        true_rew = process_labels(batch['rewards'])
-        # print("True Out Shape:", true_rew.shape)
-        
-        pred_rew = model2(train_data)
-        # print("Pred Rew Shape:", pred_rew.shape)
-        # print()
-
-        
-        optimizer2.zero_grad()
-        l = loss(pred_rew, true_rew)
-        l.backward()
-        optimizer2.step()
-
-        total_loss += l.item()
-
-    print("epoch:", epoch, ", loss:", total_loss)
-
-# print(model.lstm_encoder.encoder.state_dict)
-print(optimizer.state_dict)
-
-# th.save({
-#             "model": model.state_dict(),
-#             "optim": optimizer.state_dict()}, "saved models/full_reward_gen_model")
-th.save(model.state_dict(), "saved models/full_reward_gen_model")
-th.save(optimizer.state_dict(), "saved models/full_reward_optim")
+th.save({
+            "model": model.state_dict(),
+            "optim": optimizer.state_dict()}, "saved models/full_reward_gen_model")
+# th.save(model.state_dict(), "saved models/full_reward_gen_model")
+# th.save(optimizer.state_dict(), "saved models/full_reward_optim")
 th.save(model.lstm_encoder.encoder.state_dict(), "saved models/encoder_model")

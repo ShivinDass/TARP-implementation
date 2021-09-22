@@ -2,7 +2,8 @@ from sprites_datagen.rewards import Reward
 import torch as th
 from torch import nn
 from torch.nn import functional as F
-
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+import gym
 
 class MLP(nn.Module):
 
@@ -103,3 +104,65 @@ class RewardGen(nn.Module):
         # print(out.shape)
 
         return out
+
+
+class CustomFeatureExtractor(BaseFeaturesExtractor):
+    def __init__(self, observation_space: gym.Space, features_dim: int = 64):
+        super().__init__(observation_space, features_dim=features_dim)
+        self.encoder = Encoder()
+    
+    def forward(self, observations: th.Tensor) -> th.Tensor:
+        return self.encoder(observations)
+
+
+class EncoderDecoder(nn.Module):
+    def __init__(self):
+        super(EncoderDecoder, self).__init__()
+        
+        self.encoder = Encoder()
+        
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2, padding=0),
+            nn.ReLU(),
+            nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(16, 8, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(8, 4, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(4, 2, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(2, 1, kernel_size=4, stride=2, padding=1),
+            nn.Sigmoid()
+        )
+
+        # self.decoder = nn.Sequential(
+        #     nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2, padding=0),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose2d(16, 8, kernel_size=4, stride=2, padding=1),
+        #     nn.ReLU(),
+        #     nn.Upsample(scale_factor=2),
+        #     nn.Conv2d(in_channels=8, out_channels=4, kernel_size=3, stride=1, padding=1),
+        #     nn.ReLU(),
+        #     nn.Upsample(scale_factor=2),
+        #     nn.Conv2d(in_channels=4, out_channels=2, kernel_size=3, stride=1, padding=1),
+        #     nn.ReLU(),
+        #     nn.Upsample(scale_factor=2),
+        #     nn.Conv2d(in_channels=2, out_channels=1, kernel_size=3, stride=1, padding=1),
+        #     nn.Sigmoid()
+        # )
+
+    def forward(self, input):
+        batch_size = input.shape[0]
+        seq_len = input.shape[1]
+        x = input.reshape(batch_size*seq_len, 1, 64, 64)
+        
+        x = self.encoder(x)
+        # print(x.shape)
+
+        x = x.reshape(-1, 64, 1, 1)
+        x = self.decoder(x)
+        # print(x.shape)
+        return x

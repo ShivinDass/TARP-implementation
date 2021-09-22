@@ -4,9 +4,9 @@ from stable_baselines3 import PPO
 import matplotlib.pyplot as plt
 import copy
 
-env = gym.make('SpritesState-v0')
+env = gym.make('SpritesState-v1')
 
-trained_policy = PPO.load("saved models/ppo_state_policy")
+trained_policy = PPO.load("saved models/ppo_state_policy_distractor1")
 
 obs = env.reset()
 plt.figure()
