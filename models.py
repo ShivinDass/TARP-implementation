@@ -155,11 +155,11 @@ class EncoderDecoder(nn.Module):
         # )
 
     def forward(self, input):
-        batch_size = input.shape[0]
-        seq_len = input.shape[1]
-        x = input.reshape(batch_size*seq_len, 1, 64, 64)
+        # batch_size = input.shape[0]
+        # seq_len = input.shape[1]
+        # x = input.reshape(batch_size*seq_len, 1, 64, 64)
         
-        x = self.encoder(x)
+        x = self.encoder(input)
         # print(x.shape)
 
         x = x.reshape(-1, 64, 1, 1)
