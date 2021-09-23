@@ -133,6 +133,10 @@ class EncoderDecoder(nn.Module):
             nn.ConvTranspose2d(4, 2, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
             nn.ConvTranspose2d(2, 1, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1),
             nn.Sigmoid()
         )
 

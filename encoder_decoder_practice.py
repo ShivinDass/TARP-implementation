@@ -23,7 +23,7 @@ train_dataloader = DataLoader(dataset, batch_size=32)
 enc = EncoderDecoder()
 
 for batch in train_dataloader:
-    train_data = batch['images']
+    train_data = batch['images'].reshape(-1,1,64,64)
 
     x = enc(train_data)
     print(x.shape)

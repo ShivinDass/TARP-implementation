@@ -23,7 +23,7 @@ def process_labels(rewards):
 reward_list = [VertPosReward, HorPosReward, AgentXReward, AgentYReward, TargetXReward, TargetYReward]
 reward_list = [VertPosReward]
 spec = AttrDict(
-	resolution=8,
+	resolution=64,
 	max_seq_len=30,#30
 	max_speed=0.05,      # total image range [0, 1]
 	obj_size=0.2,       # size of objects, full images is 1.0
