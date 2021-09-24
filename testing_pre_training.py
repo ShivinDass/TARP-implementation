@@ -35,23 +35,13 @@ spec = AttrDict(
 
 dataset = MovingSpriteDataset(spec)
 train_dataloader = DataLoader(dataset, batch_size=32)
-# th.save(train_dataloader, "data/pre_training_data32.pth")
-# print(dataset[0]['images'][0])
-# exit(0)
 
 
-# train_dataloader = th.load("data/pre_training_data.pth")
-n_epochs = 100
-model = RewardGen(len(spec['rewards']))
-# checkpoint = th.load("saved models/full_reward_gen_model")
-# model.load_state_dict(checkpoint)
+n_epochs = 50
+model = test_RewardGen()
 
 optimizer = optim.Adam(model.parameters(), lr = 0.0005)
-# optimizer = RAdam(model.parameters(), lr = 0.0005)
 loss = th.nn.MSELoss()
-# checkpoint2 = th.load("saved models/full_reward_optim")
-# optimizer.load_state_dict(checkpoint2)
-# print(optimizer.state_dict)
 
 for epoch in range(n_epochs):
 
@@ -59,13 +49,13 @@ for epoch in range(n_epochs):
 
     for batch in tqdm(train_dataloader):
 
-        train_data = batch['images']
-        # print("Train Data Shape:",train_data.shape)
+        train_data = batch['images'].reshape(-1,1,64,64)
         true_rew = process_labels(batch['rewards'])
-        # print("True Out Shape:", true_rew.shape)
+        # print(train_data.shape, true_rew.shape)
         
         pred_rew = model(train_data)
         # print("Pred Rew Shape:", pred_rew.shape)
+        # exit(0)
         # print()
 
         
@@ -79,25 +69,11 @@ for epoch in range(n_epochs):
 
     print("epoch:", epoch, ", loss:", total_loss)
 
-# for param in model.lstm_encoder.encoder.parameters():
-#     print(param)
-# print("\n\n")
-
-
-
-# th.save({
-#             "model": model.state_dict(),
-#             "optim": optimizer.state_dict()}, "saved models/full_reward_gen_model")
-# # th.save(model.state_dict(), "saved models/full_reward_gen_model")
-# # th.save(optimizer.state_dict(), "saved models/full_reward_optim")
-# th.save(model.lstm_encoder.encoder.state_dict(), "saved models/encoder_model")
-
-
 
 for batch in train_dataloader:
     with th.no_grad():
         # print(batch['images'].shape)
-        pred_rew = model(batch['images'])
+        pred_rew = model(batch['images'].reshape(-1,1,64,64))
     true_rew = process_labels(batch['rewards'])
     # print(pred_rew.shape, true_rew.shape)
     for b in range(1):#pred_rew.shape[0]//20):

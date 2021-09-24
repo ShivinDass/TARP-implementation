@@ -5,10 +5,10 @@ from torch.nn import functional as F
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 import gym
 
-class MLP(nn.Module):
+class MLP32(nn.Module):
 
     def __init__(self, input_dim, output_dim):
-        super(MLP, self).__init__()
+        super(MLP32, self).__init__()
 
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -20,6 +20,26 @@ class MLP(nn.Module):
             nn.ReLU(),
             nn.Linear(in_features=32, out_features=self.output_dim),
             nn.Sigmoid()
+        )
+
+    def forward(self, input):
+        return self.mlp(input)
+
+class MLP64(nn.Module):
+
+    def __init__(self, input_dim, output_dim):
+        super(MLP64, self).__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.mlp = nn.Sequential(
+            nn.Linear(in_features=self.input_dim, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=self.output_dim),
+            nn.ReLU()
         )
 
     def forward(self, input):
@@ -58,6 +78,7 @@ class LSTM_Encoder(nn.Module):
         super(LSTM_Encoder, self).__init__()
 
         self.encoder = Encoder()
+        self.mlp = MLP64(input_dim=64, output_dim=64)
 
         self.input_size = 64
         self.hidden_size = 64
@@ -72,6 +93,8 @@ class LSTM_Encoder(nn.Module):
         x = input.reshape(batch_size*seq_len, 1, 64, 64)
         # print(x.shape)
         x = self.encoder(x)
+        # print(x.shape)
+        x = self.mlp(x)
         # print(x.shape)
         x = x.reshape(batch_size, seq_len, -1)
         # print(x.shape)
@@ -89,7 +112,7 @@ class RewardGen(nn.Module):
 
         self.reward_mlp = []
         for _ in range(n_rewards):
-            self.reward_mlp.append(MLP(input_dim=64, output_dim=1))
+            self.reward_mlp.append(MLP32(input_dim=64, output_dim=1))
     
     def forward(self, input):
         x = self.lstm_encoder(input)
@@ -133,10 +156,10 @@ class EncoderDecoder(nn.Module):
             nn.ConvTranspose2d(4, 2, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
             nn.ConvTranspose2d(2, 1, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1),
+            # nn.ReLU(),
+            # nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1),
+            # nn.ReLU(),
+            # nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1),
             nn.Sigmoid()
         )
 
@@ -169,4 +192,18 @@ class EncoderDecoder(nn.Module):
         x = x.reshape(-1, 64, 1, 1)
         x = self.decoder(x)
         # print(x.shape)
+        return x
+
+
+
+class test_RewardGen(nn.Module):
+
+    def __init__(self):
+        super(test_RewardGen, self).__init__()
+        self.encoder = Encoder()
+        self.mlp = MLP32(input_dim=64, output_dim=1)
+    
+    def forward(self, input):
+        x = self.encoder(input)
+        x = self.mlp(x)
         return x
