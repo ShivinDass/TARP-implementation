@@ -38,7 +38,7 @@ train_dataloader = DataLoader(dataset, batch_size=32)
 
 
 n_epochs = 50
-model = test_RewardGen()
+model = test_RewardGen(len(reward_list))
 
 optimizer = optim.Adam(model.parameters(), lr = 0.0005)
 loss = th.nn.MSELoss()

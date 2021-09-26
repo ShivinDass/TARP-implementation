@@ -107,25 +107,25 @@ class RewardGen(nn.Module):
     def __init__(self, n_rewards):
         super(RewardGen, self).__init__()
 
-        self.n_rewards = n_rewards
         self.lstm_encoder = LSTM_Encoder()
 
-        self.reward_mlp = []
-        for _ in range(n_rewards):
-            self.reward_mlp.append(MLP32(input_dim=64, output_dim=1))
-    
+        # self.n_rewards = n_rewards
+        # self.reward_mlp = []
+        # for _ in range(n_rewards):
+        #     self.reward_mlp.append(MLP32(input_dim=64, output_dim=1))
+        self.mlp = MLP32(input_dim=64, output_dim=1)
+
+
     def forward(self, input):
         x = self.lstm_encoder(input)
         h_dim = x.shape[-1]
 
         x = x.reshape(-1, h_dim)
         
-        out = self.reward_mlp[0](x)
-        # print(out.shape)
-        for i in range(1,self.n_rewards):
-            out = th.cat((out,self.reward_mlp[i](x)),0)
-        # print(out.shape)
-
+        # out = self.reward_mlp[0](x)
+        # for i in range(1,self.n_rewards):
+        #     out = th.cat((out,self.reward_mlp[i](x)),0)
+        out = self.mlp(x)
         return out
 
 
@@ -198,12 +198,23 @@ class EncoderDecoder(nn.Module):
 
 class test_RewardGen(nn.Module):
 
-    def __init__(self):
+    def __init__(self, n_rewards):
         super(test_RewardGen, self).__init__()
         self.encoder = Encoder()
-        self.mlp = MLP32(input_dim=64, output_dim=1)
+
+        self.n_rewards = n_rewards
+        self.reward_mlp = []
+        for _ in range(n_rewards):
+            self.reward_mlp.append(MLP32(input_dim=64, output_dim=1))
+        # self.mlp = MLP32(input_dim=64, output_dim=1)
+
     
     def forward(self, input):
         x = self.encoder(input)
-        x = self.mlp(x)
-        return x
+        
+        out = self.reward_mlp[0](x)
+        # print(out.shape)
+        for i in range(1,self.n_rewards):
+            out = th.cat((out,self.reward_mlp[i](x)),0)
+        # out = self.mlp(x)        
+        return out
