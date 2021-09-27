@@ -39,5 +39,5 @@ policy_kwargs = dict(
     features_extractor_class = CustomFeatureExtractor
 )
 model = PPO(policies.ActorCriticCnnPolicy, env, verbose=1, batch_size=100, n_steps=200, policy_kwargs = policy_kwargs)
-print(type(model.policy.features_extractor))
+# print(type(model.policy.features_extractor))
 model.learn(total_timesteps=int(5e5))

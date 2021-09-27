@@ -23,7 +23,7 @@ def process_labels(rewards):
 
 
 reward_list = [VertPosReward, HorPosReward, AgentXReward, AgentYReward, TargetXReward, TargetYReward]
-reward_list = [AgentXReward]
+reward_list = [AgentXReward, AgentYReward]
 spec = AttrDict(
 	resolution=64,
 	max_seq_len=30,#30
