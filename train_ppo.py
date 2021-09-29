@@ -27,11 +27,20 @@ class ExpandImgDimWrapper(gym.core.ObservationWrapper):
     def observation(self, obs):
         return np.expand_dims(obs,axis=0)
 
+log_dir = "logs/cur/spritesv2_state"
+env = gym.make('SpritesState-v2')
+env = Monitor(env, log_dir)
+eval_env = gym.make('SpritesState-v2')
+eval_callback = EvalCallback(eval_env, best_model_save_path='saved_models/best_model/',
+                             log_path='logs/best_model/', eval_freq=1200,
+                             deterministic=True, render=False)
+model = PPO(policies.ActorCriticPolicy, env, verbose=1, batch_size=100, n_steps=200)#PPO('MlpPolicy', env, verbose=1)policies.ActorCriticPolicy
+model.learn(total_timesteps= int(6e5), callback=eval_callback)
+# model.save("saved_models/ppo_state_policy_distractor1")
 
-# venv = gym.make('SpritesState-v1')
-# model = PPO('MlpPolicy', venv, verbose=1, batch_size=100, n_steps=200)#PPO('MlpPolicy', env, verbose=1)policies.ActorCriticPolicy
-# model.learn(total_timesteps= int(5e5))
-# model.save("saved models/ppo_state_policy_distractor1")
+exit(0)
+
+
 
 log_dir = "logs/cur/spritesv0_encoded"
 env = gym.make('Sprites-v0')

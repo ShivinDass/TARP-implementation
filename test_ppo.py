@@ -23,7 +23,7 @@ class ExpandImgDimWrapper(gym.core.ObservationWrapper):
         return np.expand_dims(obs,axis=0)
 
 
-env = ExpandImgDimWrapper(gym.make('Sprites-v0'))
+env = gym.make('SpritesState-v2')#ExpandImgDimWrapper(gym.make('Sprites-v0'))
 
 trained_policy = PPO.load("saved_models/best_model/best_model")
 
