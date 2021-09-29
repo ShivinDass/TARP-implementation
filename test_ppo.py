@@ -3,10 +3,29 @@ import sprites_env
 from stable_baselines3 import PPO
 import matplotlib.pyplot as plt
 import copy
+import numpy as np
+import gym.spaces as spaces
 
-env = gym.make('SpritesState-v1')
+class ExpandImgDimWrapper(gym.core.ObservationWrapper):
+    """
+    Changes observation image dim from (dim,dim) to (1,dim,dim)
+    """
 
-trained_policy = PPO.load("saved models/ppo_state_policy_distractor1")
+    def __init__(self, env):
+        super().__init__(env)
+
+        self.observation_space = spaces.Box(low=0.0, high=1,
+                shape=(1,env.resolution, env.resolution),
+                dtype=np.float32)
+        self.resolution = env.resolution
+
+    def observation(self, obs):
+        return np.expand_dims(obs,axis=0)
+
+
+env = ExpandImgDimWrapper(gym.make('Sprites-v0'))
+
+trained_policy = PPO.load("saved_models/best_model/best_model")
 
 obs = env.reset()
 plt.figure()

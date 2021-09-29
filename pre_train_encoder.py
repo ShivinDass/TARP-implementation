@@ -23,7 +23,7 @@ def process_labels(rewards):
 
 
 reward_list = [VertPosReward, HorPosReward, AgentXReward, AgentYReward, TargetXReward, TargetYReward]
-reward_list = [AgentXReward, AgentYReward]
+reward_list = [AgentXReward, AgentYReward, TargetXReward, TargetYReward]
 spec = AttrDict(
 	resolution=64,
 	max_seq_len=30,#30
@@ -41,17 +41,16 @@ train_dataloader = DataLoader(dataset, batch_size=32)
 
 
 # train_dataloader = th.load("data/pre_training_data.pth")
-n_epochs = 100
+n_epochs = 150
 model = RewardGen(len(spec['rewards']))
-# checkpoint = th.load("saved models/full_reward_gen_model")
+# checkpoint = th.load("saved_models/full_reward_gen_model")
 # model.load_state_dict(checkpoint)
 
 optimizer = optim.Adam(model.parameters(), lr = 0.0005)
 # optimizer = RAdam(model.parameters(), lr = 0.0005)
-loss = th.nn.MSELoss()
-# checkpoint2 = th.load("saved models/full_reward_optim")
+# checkpoint2 = th.load("saved_models/full_reward_optim")
 # optimizer.load_state_dict(checkpoint2)
-# print(optimizer.state_dict)
+loss = th.nn.MSELoss()
 
 for epoch in range(n_epochs):
 
@@ -87,10 +86,10 @@ for epoch in range(n_epochs):
 
 # th.save({
 #             "model": model.state_dict(),
-#             "optim": optimizer.state_dict()}, "saved models/full_reward_gen_model")
-# # th.save(model.state_dict(), "saved models/full_reward_gen_model")
-# # th.save(optimizer.state_dict(), "saved models/full_reward_optim")
-# th.save(model.lstm_encoder.encoder.state_dict(), "saved models/encoder_model")
+#             "optim": optimizer.state_dict()}, "saved_models/full_reward_gen_model")
+th.save(model.state_dict(), "saved_models/full_reward_gen_model")
+th.save(optimizer.state_dict(), "saved_models/full_reward_optim")
+th.save(model.lstm_encoder.encoder.state_dict(), "saved_models/encoder_model")
 
 
 
