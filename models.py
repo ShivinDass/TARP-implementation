@@ -70,8 +70,9 @@ class Encoder(nn.Module):
         # print(x.shape)
         x = th.flatten(x, start_dim=1)
         # print(x.shape)
-        x = F.leaky_relu(self.fc1(x))
+        x = th.sigmoid(self.fc1(x))#F.leaky_relu(self.fc1(x))
         return x
+
 
 class LSTM_Encoder(nn.Module):
     def __init__(self):

@@ -105,7 +105,8 @@ class SpritesEnv(gym.Env):
         self.all_idxs = np.array(self.base_shape_idx_list + list(self.distractor_shape_idx_list))
         self.shapes = np.asarray(self.SHAPES)[self.all_idxs]
         state = np.random.uniform(size=(self.n_distractors + 2, self._n_state))
-
+        # state = state = np.array([[0.00810652, 0.3837015,  0.24839758, 0.89129594],[0.64946208, 0.32131257, 0.48361856, 0.56116825]])
+        # state = np.array([np.random.uniform(size=(4)),[0.5, 0.5, np.random.uniform(), np.random.uniform()]])
         if self._bounds is not None:
             min_value = self._bounds[np.newaxis, :, 0]
             max_value = self._bounds[np.newaxis, :, 1]

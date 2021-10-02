@@ -41,17 +41,17 @@ train_dataloader = DataLoader(dataset, batch_size=32)
 
 
 # train_dataloader = th.load("data/pre_training_data.pth")
-n_epochs = 150
+n_epochs = 200
 model = RewardGen(len(spec['rewards']))
 # checkpoint = th.load("saved_models/full_reward_gen_model")
 # model.load_state_dict(checkpoint)
 
-optimizer = optim.Adam(model.parameters(), lr = 0.0005)
+print(sum(p.numel() for p in model.parameters()))
+optimizer = optim.Adam(model.parameters(), lr = 0.0005)#, weight_decay=15e-8)
 # optimizer = RAdam(model.parameters(), lr = 0.0005)
 # checkpoint2 = th.load("saved_models/full_reward_optim")
 # optimizer.load_state_dict(checkpoint2)
 loss = th.nn.MSELoss()
-
 for epoch in range(n_epochs):
 
     total_loss = 0
@@ -71,6 +71,7 @@ for epoch in range(n_epochs):
         optimizer.zero_grad()
         # print(pred_rew.shape, true_rew.shape)
         l = loss(pred_rew, true_rew)
+
         l.backward()
         optimizer.step()
 

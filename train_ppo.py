@@ -27,18 +27,34 @@ class ExpandImgDimWrapper(gym.core.ObservationWrapper):
     def observation(self, obs):
         return np.expand_dims(obs,axis=0)
 
-log_dir = "logs/cur/spritesv2_state"
-env = gym.make('SpritesState-v2')
-env = Monitor(env, log_dir)
-eval_env = gym.make('SpritesState-v2')
-eval_callback = EvalCallback(eval_env, best_model_save_path='saved_models/best_model/',
-                             log_path='logs/best_model/', eval_freq=1200,
-                             deterministic=True, render=False)
-model = PPO(policies.ActorCriticPolicy, env, verbose=1, batch_size=100, n_steps=200)#PPO('MlpPolicy', env, verbose=1)policies.ActorCriticPolicy
-model.learn(total_timesteps= int(6e5), callback=eval_callback)
-# model.save("saved_models/ppo_state_policy_distractor1")
+class ExpandImgDimWrapper2(gym.core.ObservationWrapper):
+    """
+    Changes observation image dim from (dim,dim) to (1,dim,dim)
+    """
 
-exit(0)
+    def __init__(self, env):
+        super().__init__(env)
+
+        self.observation_space = spaces.Box(low=0, high=255,
+                shape=(1,env.resolution, env.resolution),
+                dtype=np.uint8)
+        self.resolution = env.resolution
+
+    def observation(self, obs):
+        return np.expand_dims((obs*255).astype(np.uint8),axis=0)
+
+# log_dir = "logs/cur/spritesv2_state"
+# env = gym.make('SpritesState-v2')
+# env = Monitor(env, log_dir)
+# eval_env = gym.make('SpritesState-v2')
+# eval_callback = EvalCallback(eval_env, best_model_save_path='saved_models/best_model/',
+#                              log_path='logs/best_model/', eval_freq=1200,
+#                              deterministic=True, render=False)
+# model = PPO(policies.ActorCriticPolicy, env, verbose=1, batch_size=100, n_steps=200)#PPO('MlpPolicy', env, verbose=1)policies.ActorCriticPolicy
+# model.learn(total_timesteps= int(6e5), callback=eval_callback)
+# # model.save("saved_models/ppo_state_policy_distractor1")
+
+# exit(0)
 
 
 
@@ -55,13 +71,13 @@ eval_callback = EvalCallback(eval_env, best_model_save_path='saved_models/best_m
                              deterministic=True, render=False)
 
 policy_kwargs = dict(
-    features_extractor_class = CustomFeatureExtractor
+    features_extractor_class = CustomFeatureExtractor, normalize_images=False
 )
-model = PPO(policies.ActorCriticCnnPolicy, env, verbose=1, batch_size=100, n_steps=200, policy_kwargs = policy_kwargs)
+model = PPO(policies.ActorCriticCnnPolicy, env, verbose=1, batch_size=120, n_steps=240, policy_kwargs = policy_kwargs)
 checkpoint = th.load("saved_models/encoder_model")
 model.policy.features_extractor.encoder.load_state_dict(checkpoint)
 # for param in model.policy.features_extractor.parameters():
 #     param.requires_grad_ = False
-# print(type(model.policy.features_extractor))
-model.learn(total_timesteps=int(6e5), callback=eval_callback)
-model.save("saved_models/ppo_encoder_v0")
+# print(type(model.policy.features_extractor.encoder))
+model.learn(total_timesteps=int(2e5), callback=eval_callback)
+model.save("saved_models/best_model/ppo_encoder_v0")
