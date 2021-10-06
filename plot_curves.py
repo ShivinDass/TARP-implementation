@@ -54,7 +54,7 @@ def plot_results(log_folder, title='Learning Curve'):
     fig = plt.figure(title+" Smoothed")
     for i in range(len(data_frames)):
         x, y = ts2xy(data_frames[i], 'timesteps')
-        y = moving_average(y, window=2000)
+        y = moving_average(y, window=500)
         # Truncate x
         x = x[len(x) - len(y):]
 

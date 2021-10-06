@@ -134,10 +134,13 @@ class CustomFeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space: gym.Space, features_dim: int = 64):
         super().__init__(observation_space, features_dim=features_dim)
         self.encoder = Encoder()
+        self.flatten = nn.Flatten()
     
     def forward(self, observations: th.Tensor) -> th.Tensor:
-        return self.encoder(observations)
-
+        global cnt
+        cnt += 1
+        return self.flatten(self.encoder(observations))
+cnt = 0
 
 class EncoderDecoder(nn.Module):
     def __init__(self):
