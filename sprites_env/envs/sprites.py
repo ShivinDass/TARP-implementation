@@ -133,7 +133,7 @@ class SpritesEnv(gym.Env):
         done = (self.ep_len >= self.max_ep_len)
         info = {}
 
-        return im / 255, reward, done, info
+        return im / 255, reward-0.6, done, info
 
     def _reward(self, state):
         agent_pos = state[0, :2]

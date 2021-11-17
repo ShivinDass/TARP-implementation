@@ -88,9 +88,9 @@ for epoch in range(n_epochs):
 # th.save({
 #             "model": model.state_dict(),
 #             "optim": optimizer.state_dict()}, "saved_models/full_reward_gen_model")
-th.save(model.state_dict(), "saved_models/full_reward_gen_model")
-th.save(optimizer.state_dict(), "saved_models/full_reward_optim")
-th.save(model.lstm_encoder.encoder.state_dict(), "saved_models/encoder_model")
+th.save(model.state_dict(), "saved_models/full_reward_gen_model_sep")
+th.save(optimizer.state_dict(), "saved_models/full_reward_optim_sep")
+th.save(model.lstm_encoder.encoder.state_dict(), "saved_models/encoder_model_sep")
 
 
 

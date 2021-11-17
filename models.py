@@ -1,8 +1,14 @@
+from copy import deepcopy
+from torch.nn.modules import activation
 from sprites_datagen.rewards import Reward
 import torch as th
 from torch import nn
 from torch.nn import functional as F
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from stable_baselines3.common.distributions import DiagGaussianDistribution
+from stable_baselines3.common.torch_layers import MlpExtractor
+from stable_baselines3.common.preprocessing import preprocess_obs
+import numpy as np
 import gym
 
 class MLP32(nn.Module):
@@ -48,30 +54,62 @@ class MLP64(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self):
+    def __init__(self, activation_fn = nn.LeakyReLU):
         super(Encoder, self).__init__()
 
         self.in_channels = 1
         self.input_dim = 64
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=4, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
-            nn.Conv2d(in_channels=4, out_channels=8, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
-            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(),
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2, stride=2, padding=0), nn.LeakyReLU()
+            nn.Conv2d(in_channels=1, out_channels=4, kernel_size=4, stride=2, padding=1), activation_fn(),
+            nn.Conv2d(in_channels=4, out_channels=8, kernel_size=4, stride=2, padding=1), activation_fn(),
+            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=4, stride=2, padding=1), activation_fn(),
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=4, stride=2, padding=1), activation_fn(),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=1), activation_fn(),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2, stride=2, padding=0), activation_fn()
         )
+        
+        self.fc1 = nn.Linear(in_features=128, out_features=64)
+
+    def forward(self, input):
+
+        x = self.encoder(input)
+        x = th.flatten(x, start_dim=1)
+        x = th.sigmoid(self.fc1(x))
+        return x
+
+class Encoder2(nn.Module):
+
+    def __init__(self, activation_fn = nn.LeakyReLU):
+        super(Encoder2, self).__init__()
+
+        self.in_channels = 1
+        self.input_dim = 64
+
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=4, kernel_size=4, stride=2, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=4, out_channels=8, kernel_size=4, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=4, stride=2, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=4, stride=2, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2, stride=2, padding=0)
+        
+        self.activation = activation_fn()
 
         self.fc1 = nn.Linear(in_features=128, out_features=64)
 
     def forward(self, input):
-        x = self.encoder(input)
-        # print(x.shape)
+        with th.no_grad():
+            x = self.activation(self.conv1(input))
+            x = self.activation(self.conv2(x))
+            x = self.activation(self.conv3(x))
+            x = self.activation(self.conv4(x))
+            x = self.activation(self.conv5(x))
+        x = self.activation(self.conv6(x))
+         
         x = th.flatten(x, start_dim=1)
-        # print(x.shape)
-        x = th.sigmoid(self.fc1(x))#F.leaky_relu(self.fc1(x))
+        x = th.sigmoid(self.fc1(x))
         return x
+
 
 
 class LSTM_Encoder(nn.Module):
@@ -137,10 +175,18 @@ class CustomFeatureExtractor(BaseFeaturesExtractor):
         self.flatten = nn.Flatten()
     
     def forward(self, observations: th.Tensor) -> th.Tensor:
-        global cnt
-        cnt += 1
-        return self.flatten(self.encoder(observations))
-cnt = 0
+        with th.no_grad():
+            return self.flatten(self.encoder(observations))
+
+class CustomFeatureExtractor2(BaseFeaturesExtractor):
+    def __init__(self, observation_space: gym.Space, features_dim: int = 64):
+        super().__init__(observation_space, features_dim=features_dim)
+        self.encoder1 = Encoder()
+        self.encoder2 = Encoder()
+        self.flatten = nn.Flatten()
+    
+    def forward(self, observations: th.Tensor) -> th.Tensor:
+        return self.flatten(self.encoder1(observations)), self.flatten(self.encoder2(observations))
 
 class EncoderDecoder(nn.Module):
     def __init__(self):
@@ -223,3 +269,35 @@ class test_RewardGen(nn.Module):
             out = th.cat((out,self.reward_mlp[i](x)),0)
         # out = self.mlp(x)        
         return out
+
+
+class PolicyReplicate(nn.Module):
+
+    def __init__(self, env, features_dim = 64, net_arch = [{'pi':[64,64], 'vf':[64,64]}], activation_fn = nn.Tanh):
+        super(PolicyReplicate, self).__init__()
+        self.observation_space = env.observation_space
+        self.action_space = env.action_space
+        self.features_extractor = CustomFeatureExtractor(observation_space = self.observation_space, features_dim = features_dim)
+
+        self.mlp_extractor = MlpExtractor(feature_dim = features_dim,
+                                        net_arch = net_arch,
+                                        activation_fn = activation_fn)
+        
+        self.value_net = nn.Linear(self.mlp_extractor.latent_dim_vf, 1)
+        self.action_dist = DiagGaussianDistribution(action_dim=int(np.prod(self.action_space.shape)))
+        self.action_net, self.log_std = self.action_dist.proba_distribution_net(latent_dim=self.mlp_extractor.latent_dim_pi, log_std_init=0.0)
+
+    def forward(self, obs, deterministic: bool = False):
+        # obs = th.tensor(obs)
+        preprocessed_obs = preprocess_obs(obs, self.observation_space, normalize_images=False)
+        features = self.features_extractor(preprocessed_obs)
+
+        latent_pi, latent_vf = self.mlp_extractor(features)
+        latent_sde = latent_pi
+
+        values = self.value_net(latent_vf)
+        mean_actions = self.action_net(latent_pi)
+        distribution = self.action_dist.proba_distribution(mean_actions, self.log_std)
+        actions = distribution.get_actions(deterministic=deterministic)
+        log_prob = distribution.log_prob(actions)
+        return actions, values, log_prob

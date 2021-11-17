@@ -1,14 +1,7 @@
-import gym
-from env_wrappers import DiscretizeActionsWrapper
-from models import LSTM_Encoder, Encoder
-import sprites_env
-from stable_baselines3 import PPO
-import matplotlib.pyplot as plt
-import copy
-import numpy as np
 import gym.spaces as spaces
-import torch as th
-import random
+import numpy as np
+import gym
+from models import *
 
 class ExpandImgDimWrapper(gym.core.ObservationWrapper):
     """
@@ -28,7 +21,7 @@ class ExpandImgDimWrapper(gym.core.ObservationWrapper):
 
 class ExpandImgDimWrapper2(gym.core.ObservationWrapper):
     """
-    Changes observation image dim from (dim,dim) to (1,dim,dim)
+    Changes observation image dim from (dim,dim) to (1,dim,dim) and converts pixels from 0-1 in 0-255
     """
 
     def __init__(self, env):
@@ -62,40 +55,24 @@ class EncoderWrapper(gym.core.ObservationWrapper):
 
     def observation(self, obs):
         obs = obs.reshape(1, 1,obs.shape[0], obs.shape[1])
-        # print(obs.shape)
         with th.no_grad():
-            latent = self.encoder.forward(th.as_tensor(obs).float()).squeeze()
-            # print(latent.shape)
+            latent = self.encoder(th.as_tensor(obs).float()).squeeze()
         return np.array(latent)
 
-
-env = ExpandImgDimWrapper(gym.make('Sprites-v2'))
-# env = gym.make('SpritesState-v2')
-
-trained_policy = PPO.load("saved_models/best_model/ppo_imageenc_v2")
-
-obs = env.reset()
-plt.figure()
-im = plt.imshow(env.render())
-
-prev_f = None
-total_latent_loss = 0
-for i in range(1000):
-    action, _state = trained_policy.predict(obs, deterministic=True)
-
-    n_obs, reward, done, info = env.step(action)
+class DiscretizeActionsWrapper(gym.ActionWrapper):
+    mapping = {
+        0:  (1,0),
+        1:  (1,1),
+        2:  (0,1),
+        3:  (-1,1),
+        4:  (-1,0),
+        5:  (-1,-1),
+        6:  (0,-1),
+        7:  (1,-1)
+    }
+    def __init__(self, env):
+        super().__init__(env)
+        self.action_space = spaces.Discrete(8)
     
-    with th.no_grad():
-        print(trained_policy.policy.forward(th.tensor(obs).unsqueeze(dim=0), deterministic=True))
-    print(action, reward)
-    im.set_data(env.render())
-    plt.show(block=False)
-
-    obs = copy.deepcopy(n_obs)
-    if done:
-        print("done")
-        obs = env.reset()
-        prev_f = None
-    l = input()
-
-print("Total Latent Loss:", total_latent_loss)
+    def action(self, action):
+        return self.mapping[action]

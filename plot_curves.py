@@ -42,7 +42,7 @@ def moving_average(values, window):
     return np.convolve(values, weights, 'valid')
 
 
-def plot_results(log_folder, title='Learning Curve'):
+def plot_results(log_folder, timesteps = int(1e6), title='Learning Curve'):
     """
     plot the results
 
@@ -54,18 +54,23 @@ def plot_results(log_folder, title='Learning Curve'):
     fig = plt.figure(title+" Smoothed")
     for i in range(len(data_frames)):
         x, y = ts2xy(data_frames[i], 'timesteps')
-        y = moving_average(y, window=500)
+        if y[0]<10:
+            x, y = x[:timesteps], (np.array(y[:timesteps])+24)
+        else:
+            x, y = x[:timesteps], y[:timesteps]
+        #print(len(x), len(y))
+        y = moving_average(y, window=1000)
         # Truncate x
         x = x[len(x) - len(y):]
 
         plt.plot(x, y, label = labels[i])
     plt.xlabel('Number of Timesteps')
     plt.ylabel('Rewards')
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.show()
 
 
-labels = ["Reward Prediction Finetune", "Image Scratch", "Oracle"]
+labels = ["reward_prediction_finetune", "reward_prediction", "image_reconstruction_finetune", "image_reconstruction", "image_scratch", "oracle"]
 log_dir = "logs/cur/"
 # results_plotter.plot_results([log_dir], 1e5, results_plotter.X_TIMESTEPS, "TD3 LunarLander")
 # plt.show()
